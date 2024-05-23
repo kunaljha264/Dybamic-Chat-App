@@ -5,6 +5,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 
+const {isLogin, isLogout} = require('../../middlewares/authValidator');
 
 const storage = multer.diskStorage({
     destination: function(req,file,cb){
@@ -18,12 +19,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage : storage});
 
-router.get('/register',  userController.registrationGet);
+router.get('/register', isLogout, userController.registrationGet);
 router.post('/register', upload.single('image'), userController.registrationPost)
-router.get('/login', userController.loginGet);
+router.get('/login', isLogout, userController.loginGet);
 router.post('/login', userController.loginPost);
-router.get('/logout', userController.logoutGet);
-router.get('/dashboard', userController.dashboardGet);
+router.get('/logout', isLogin, userController.logoutGet);
+router.get('/dashboard', isLogin, userController.dashboardGet);
 
 router.get('*', function(req,res){
     res.redirect('/v1/login');
