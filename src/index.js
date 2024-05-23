@@ -6,11 +6,18 @@ const app = express();
 
 const server = http.createServer(app);
 
-const {PORT} = require('./config/serverConfig.js');
+const {PORT, SESSION_SECRET} = require('./config/serverConfig.js');
 const connect = require('./config/database');
 
 const apiRoutes = require('./routes/index');
 
+const session = require('express-session');
+app.use(session({
+    secret:SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 app.use('/', apiRoutes);
