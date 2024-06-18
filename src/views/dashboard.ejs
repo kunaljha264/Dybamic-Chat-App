@@ -4,9 +4,151 @@
     <title>Dashboard</title>
 </head>
 <body>
-    <h1>Welcome to your dashboard, <%= user.name %>!</h1>
-    <!-- Add more dashboard content here -->
 
-    <a href="/v1/logout">Logout</a>
+    <%- include('layout/header.ejs') %>
+
+    <h2 class="mb-4">Welcome to your dashboard, <%= user.name %>!</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <ul class="list-group">
+                <%
+                    if(users.length > 0){
+                        for(let i=0; i<users.length; i++){
+                            %>
+                                <li class="list-group-item list-group-item-dark cursor-pointer user-list" data-id="<%=users[i]['_id']%>">
+                                    <img src="<%= 'http://localhost:5000/' + users[i]['image'] %>" alt="User Image" width="50px" height="50px">
+                                    <%= users[i]['name'] %>
+
+
+                                    <% 
+                                        if(users[i]['is_online']==1){
+                                            %>
+                                                <sup class="online-status" id="<%=users[i]['_id'] %>-status">Online</sup>
+                                            <%
+                                        }
+                                        else{
+                                            %>
+                                                <sup class="offline-status" id="<%=users[i]['_id'] %>-status">Offline</sup>
+                                            <%
+                                        }
+                                    %>
+                                </li>
+                            <%
+                        }
+                    }
+                %>
+            </ul>
+        </div>
+
+        <div class=" col-md-8">
+            <h3 class="start-head">Click to Start the Chat</h3>
+            <div class="chat-section">
+
+                <div id="chat-container"> 
+                    
+                </div>
+
+                <form action="" id="chat-form">
+                    <input type="text" name="message" id="message" placeholder="Enter message" class="border" required>
+                    <input type="submit" value="Send Message" class= "btn btn-primary">
+                </form>
+            </div>
+        </div>
+
+    </div>
+    
+    <script>
+        var senderId = '<%= user._id %>'
+        var receiverId;
+        var socket = io('/user-namespace', {
+            auth : {
+                token : senderId,
+            }
+        });
+
+        $(document).ready(function(){
+
+            $('.user-list').click(function(){
+                var userId = $(this).attr('data-id')
+                receiverId = userId;
+                $('.start-head').hide();
+                $('.chat-section').show();
+
+                
+            });
+        });
+
+
+        // update user online status
+
+        socket.on('getOnlineUser', function(data){
+            $('#'+data.user_id+'-status').text('Online');
+            $('#'+data.user_id+'-status').removeClass('offline-status');
+            $('#'+data.user_id+'-status').addClass('online-status');
+        })
+
+        //update user offline status
+
+        socket.on('getOfflineUser', function(data){
+            $('#'+data.user_id+'-status').text('Offline');
+            $('#'+data.user_id+'-status').removeClass('online-status');
+            $('#'+data.user_id+'-status').addClass('offline-status');
+        })
+
+
+        // Chat save of user
+
+        $('#chat-form').submit(function(event){
+            event.preventDefault();
+            var message = $('#message').val();
+
+            $.ajax({
+                url: '/v1/save-chat',
+                type:'POST',
+                data:{
+                    senderid : senderId,
+                    receiverid : receiverId,
+                    message:message,
+                },
+
+                success: function(response){
+                    console.log(response.data.message);
+                    if(response.success){
+                        $('#message').val('');
+                        let chat = response.data.message;
+
+                        let html = `
+                            <div class="current-user-chat">
+                                <h5>`+chat+`</h5>
+                            </div>  
+                            `;
+
+                        $('#chat-container').append(html);
+                        socket.emit('newChat', response.data);
+                    }
+                    else{
+                        alert(data.msg);
+                    }
+                }
+            })
+        })
+
+        socket.on('loadNewChat', function(data){
+            if(senderId==data.receiver_id && receiverId==data.sender_id){
+                let html = `
+                <div class ="another-user-chat">
+                        <h5>`+data.message+`</h5>
+                </div>
+                `
+                $('#chat-container').append(html);
+            }
+            
+        })
+
+        
+
+
+    </script>
+    <%- include('layout/footer.ejs') %>
 </body>
 </html>

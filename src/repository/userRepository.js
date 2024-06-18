@@ -23,6 +23,15 @@ class UserRepository{
         }
     }
 
+    async getByFilter(data){
+        try {
+            const user = await User.find(data);
+            return user;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
 
 }
 

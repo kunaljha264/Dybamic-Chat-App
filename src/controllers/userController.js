@@ -1,3 +1,5 @@
+const Chat = require("../models/chat");
+
 const UserService = require("../services/userService");
 
 const userService = new UserService();
@@ -23,7 +25,7 @@ const registrationPost = async(req,res)=>{
         const response = await userService.create({
             name: req.body.name,
             email:req.body.email,
-            image:'images'+req.file.filename,
+            image:'images/'+req.file.filename,
             password:req.body.password
         });
         res.render('register', {message: "Your registration has been completed"});
@@ -77,8 +79,12 @@ const loginPost = async(req,res)=>{
 }
 const logoutGet = async(req,res)=>{
     try {
-        req.session.destroy();
-        res.redirect('/v1/login');
+        req.session.destroy((err) => {
+            if (err) {
+                return res.status(500).json({ message: "Failed to log out" });
+            }
+            return res.redirect('/v1/login');
+        });
     } catch (error) {
         return res.status(500).json({
             data:{},
@@ -90,8 +96,12 @@ const logoutGet = async(req,res)=>{
 }
 const dashboardGet = async(req,res)=>{
     try {
-        console.log("From dashboard");
-        res.render('dashboard', {user: req.session.user});
+        const response = await userService.findUsers({
+            _id : {
+                $nin:[req.session.user._id]
+            }
+        });
+        res.render('dashboard', {user: req.session.user, users:response});
     } catch (error) {
         return res.status(500).json({
             data:{},
@@ -101,6 +111,27 @@ const dashboardGet = async(req,res)=>{
         })
     }
 }
+
+const saveChat = async(req,res)=>{
+    try{
+        const chat = await Chat.create({
+            sender_id : req.body.senderid,
+            receiver_id : req.body.receiverid,
+            message : req.body.message,
+        })
+        res.status(200).send({
+            success:true,
+            msg:"Chat inserted",
+            data: chat
+        })
+    }catch(error){
+        res.status(400).send({
+            success:false,
+            msg:error.messagesaveChat
+        })
+    }
+}
+
 module.exports={
     registrationGet,
     registrationPost,
@@ -108,4 +139,5 @@ module.exports={
     loginPost,
     logoutGet,
     dashboardGet,
+    saveChat
 }

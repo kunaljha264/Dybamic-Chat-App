@@ -30,6 +30,15 @@ class UserService{
             throw error;
         }
     }
+
+    async findUsers(data){
+        try {
+            const response = await userRepository.getByFilter(data);
+            return response;
+        } catch (error) {
+            console.log(error);
+        }
+    }
 }
 
 
