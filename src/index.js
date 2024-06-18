@@ -62,7 +62,28 @@ usp.on("connection", async function (socket) {
     socket.broadcast.emit('loadNewChat', data);
   })
 
-  
+  socket.on('oldChats', async(data)=>{
+
+    console.log(data);
+      const chats = await Chat.find({
+        $or: [
+          {
+            sender_id: data.senderId,
+            receiver_id:data.receiverId
+          },
+          {
+            sender_id: data.receiverId,
+            receiver_id:data.senderId
+          }
+        ]
+      })
+
+      console.log(chats);
+
+      socket.emit('loadOldChat', {
+          chats: chats,
+      })
+  })
 
  
 });

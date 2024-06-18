@@ -73,7 +73,10 @@
                 receiverId = userId;
                 $('.start-head').hide();
                 $('.chat-section').show();
-
+                socket.emit('oldChats', {
+                    senderId: senderId,
+                    receiverId:receiverId,
+                })
                 
             });
         });
@@ -125,6 +128,8 @@
 
                         $('#chat-container').append(html);
                         socket.emit('newChat', response.data);
+
+                        scrollChat();
                     }
                     else{
                         alert(data.msg);
@@ -141,12 +146,48 @@
                 </div>
                 `
                 $('#chat-container').append(html);
+
+                scrollChat();
             }
             
         })
 
-        
+        // load Old chats
 
+        socket.on('loadOldChat', function(data){
+            $('#chat-container').html('');
+
+            var chats = data.chats;
+            console.log(chats);
+
+            let html = ''
+
+            for(let x=0; x<chats.length; x++){
+                
+                let className = "";
+                if(chats[x]['sender_id'] == senderId){
+                    className = "current-user-chat"
+                }else{
+                    className = "another-user-chat"
+                }
+
+                html +=`
+                <div class ="`+className+`"">
+                        <h5>`+chats[x]['message']+`</h5>
+                </div>
+                `
+            }
+            $('#chat-container').append(html);
+
+            scrollChat();
+
+        })
+
+        function scrollChat(){
+            $('#chat-container').animate({
+                scrollTop: $('#chat-container').offset().top + $('#chat-container')[0].scrollHeight
+            }, 0);
+        }
 
     </script>
     <%- include('layout/footer.ejs') %>
