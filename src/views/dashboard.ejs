@@ -56,6 +56,33 @@
         </div>
 
     </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="deleteChatModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Delete Chat</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <form id="delete-chat-form">
+            <div class="modal-body">
+                <input type="hidden" name="id" id="delete-message-id">
+                <!-- <p>Are you sure you want to delete the below message?</p> -->
+                <p><b id="delete-message"></b></p>
+            </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-danger">Delete for everyone</button>
+
+                </div>
+        </form>
+      </div>
+    </div>
+  </div>
     
     <script>
         var senderId = '<%= user._id %>'
@@ -121,8 +148,10 @@
                         let chat = response.data.message;
 
                         let html = `
-                            <div class="current-user-chat">
-                                <h5>`+chat+`</h5>
+                            <div class="current-user-chat" id="`+response.data._id+`">
+                                <h5>`+chat+`
+                                    <i class="fa fa-trash" aria-hidden="true data-id="`+response.data._id+`" data-toggle="modal" data-target="#deleteChatModal"></i>
+                                </h5>
                             </div>  
                             `;
 
@@ -141,7 +170,7 @@
         socket.on('loadNewChat', function(data){
             if(senderId==data.receiver_id && receiverId==data.sender_id){
                 let html = `
-                <div class ="another-user-chat">
+                <div class ="another-user-chat" id = "`+data._id+`">
                         <h5>`+data.message+`</h5>
                 </div>
                 `
@@ -172,10 +201,15 @@
                 }
 
                 html +=`
-                <div class ="`+className+`"">
-                        <h5>`+chats[x]['message']+`</h5>
+                <div class ="`+className+`" id= "`+chats[x]['_id']+`">
+                        <h5>`+chats[x]['message']+``;
+                    if(chats[x]['sender_id'] == senderId){
+                        html +=`<i class="fa fa-trash" aria-hidden="true" data-id="`+chats[x]['_id']+`" data-toggle="modal" data-target="#deleteChatModal"></i>`
+                    }
+                html +=`
+                        </h5>
                 </div>
-                `
+                `;
             }
             $('#chat-container').append(html);
 
@@ -189,6 +223,41 @@
             }, 0);
         }
 
+    // delete chat work
+    
+    $(document).on('click', '.fa-trash', function(){
+        let msg = $(this).parent().text();
+        
+        $('#delete-message').text(msg);
+        $('#delete-message-id').val($(this).attr('data-id'));
+        
+    })
+
+    $("#delete-chat-form").submit(function(event){
+        event.preventDefault();
+
+        var messageId = $("#delete-message-id").val();
+        console.log(messageId);
+        $.ajax({
+            url:'/v1/delete-chat',
+            type:'POST',
+            data:{id: messageId},
+            success:function(response){
+                if(response.success){
+                    $('#'+messageId).remove();
+                    $('#deleteChatModal').modal('hide');
+                    socket.emit('chatDeleted', messageId);
+
+                }else{
+                    alert(response.msg);
+                }
+            }
+        })
+    })
+
+    socket.on('chatMessageDeleted', function(id){
+        $('#'+id).remove();
+    })
     </script>
     <%- include('layout/footer.ejs') %>
 </body>

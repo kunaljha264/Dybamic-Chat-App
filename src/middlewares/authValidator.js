@@ -2,7 +2,7 @@ const isLogin = (req,res,next)=>{
     try {
         if(!req.session.user){
             
-            res.redirect('/v1/login');
+            return res.redirect('/v1/login');
       
         }
         
@@ -15,7 +15,7 @@ const isLogin = (req,res,next)=>{
 const isLogout = (req,res,next)=>{
     try {
         if(req.session.user){
-            res.redirect('/v1/dashboard');
+            return res.redirect('/v1/dashboard');
         }
         next();
     } catch (error) {

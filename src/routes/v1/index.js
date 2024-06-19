@@ -27,6 +27,8 @@ router.get('/logout', isLogin, userController.logoutGet);
 router.get('/dashboard', isLogin, userController.dashboardGet);
 
 router.post('/save-chat', userController.saveChat);
+
+router.post('/delete-chat', userController.deleteChat)
 router.get('*', function(req,res){
     res.redirect('/v1/login');
 })

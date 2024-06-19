@@ -64,7 +64,7 @@ usp.on("connection", async function (socket) {
 
   socket.on('oldChats', async(data)=>{
 
-    console.log(data);
+    
       const chats = await Chat.find({
         $or: [
           {
@@ -78,10 +78,14 @@ usp.on("connection", async function (socket) {
         ]
       })
 
-      console.log(chats);
+     
 
       socket.emit('loadOldChat', {
           chats: chats,
+      })
+
+      socket.on('chatDeleted', function(id){
+          socket.broadcast.emit('chatMessageDeleted', id);
       })
   })
 

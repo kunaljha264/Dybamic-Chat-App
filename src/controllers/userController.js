@@ -119,7 +119,7 @@ const saveChat = async(req,res)=>{
             receiver_id : req.body.receiverid,
             message : req.body.message,
         })
-        res.status(200).send({
+        return res.status(200).send({
             success:true,
             msg:"Chat inserted",
             data: chat
@@ -127,7 +127,21 @@ const saveChat = async(req,res)=>{
     }catch(error){
         res.status(400).send({
             success:false,
-            msg:error.messagesaveChat
+            msg:error.message,
+        })
+    }
+}
+
+const deleteChat = async(req,res)=>{
+    try{
+        const response  = await Chat.findByIdAndDelete({
+            _id : req.body.id
+        });
+        res.status(200).send({success:response});
+    }catch(error){
+        return res.status(400).send({
+            success:false,
+            msg:error.message,
         })
     }
 }
@@ -139,5 +153,6 @@ module.exports={
     loginPost,
     logoutGet,
     dashboardGet,
-    saveChat
+    saveChat,
+    deleteChat
 }
